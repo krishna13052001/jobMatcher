@@ -16,7 +16,7 @@ import (
 
 var (
 	db    *sql.DB
-	store = sessions.NewCookieStore([]byte("your-secret-key")) // Change this secret key
+	store = sessions.NewCookieStore([]byte("your-secret-key"))
 )
 
 type User struct {
