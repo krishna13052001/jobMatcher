@@ -73,7 +73,11 @@ func setupRoutes() {
 
 	// Start server
 	log.Println("Starting server on :8080")
-	http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		fmt.Println("Unable to start the server!!")
+		return
+	}
 }
 
 // Utility functions
@@ -84,7 +88,11 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	t.Execute(w, data)
+	err = t.Execute(w, data)
+	if err != nil {
+		fmt.Println("Unable able to load the error ", err.Error())
+		return
+	}
 }
 
 func isLoggedIn(r *http.Request) bool {
@@ -109,7 +117,7 @@ func getSessionUser(r *http.Request) (User, error) {
 
 // Handlers
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func homeHandler(w http.ResponseWriter, _ *http.Request) {
 	posts, err := getAllPosts()
 	if err != nil {
 		http.Error(w, "Unable to load posts", http.StatusInternalServerError)
@@ -148,7 +156,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		session, _ := store.Get(r, "session-name")
 		session.Values["username"] = user.Username
-		session.Save(r, w)
+		err = session.Save(r, w)
+		if err != nil {
+			fmt.Println("Unable to save the session ", err.Error())
+			return
+		}
 
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
@@ -157,12 +169,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session-name")
 	session.Options.MaxAge = -1
-	session.Save(r, w)
+	err := session.Save(r, w)
+	if err != nil {
+		fmt.Println("[logout] Unable to save the session ", err.Error())
+		return
+	}
 
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
+func registerHandler(w http.ResponseWriter, _ *http.Request) {
 	renderTemplate(w, "register.html", nil)
 }
 
