@@ -362,6 +362,7 @@ func getAllPosts() ([]Post, error) {
 		}
 		posts = append(posts, post)
 	}
+	//fmt.Println(posts)
 
 	return posts, nil
 }
