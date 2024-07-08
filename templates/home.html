@@ -7,34 +7,34 @@
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
 </head>
 <body>
-    <header>
-        <h1>Blog Home</h1>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                {{if .LoggedIn}}
-                <li><a href="/posts/new">New Post</a></li>
-                <li>
-                    <form action="/logout" method="POST" style="display:inline;">
-                        <button type="submit">Logout</button>
-                    </form>
-                </li>
-                {{else}}
-                <li><a href="/login">Login</a></li>
-                <li><a href="/register">Register</a></li>
-                {{end}}
-            </ul>
-        </nav>
-    </header>
-    <main>
-        {{range .Posts}}
-        <article>
-            <h2><a href="/post/{{.ID}}">{{.Header}}</a></h2>
-            <p>{{.Content}}</p>
-            <p>Tags: {{.Tags}}</p>
-        </article>
-        <hr>
-        {{end}}
-    </main>
+<header>
+    <h1>Blog Home</h1>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            {{if .LoggedIn}}
+            <li><a href="/posts/new">New Post</a></li>
+            <li>
+                <form action="/logout" method="POST" style="display:inline;">
+                    <button type="submit">Logout</button>
+                </form>
+            </li>
+            {{else}}
+            <li><a href="/login">Login</a></li>
+            <li><a href="/register">Register</a></li>
+            {{end}}
+        </ul>
+    </nav>
+</header>
+<main>
+    {{range .Posts}}
+    <article>
+        <h2><a href="/post/{{.ID}}">{{.Header}}</a></h2>
+        <p>{{.Content}}</p>
+        <p>Tags: {{.Tags}}</p>
+    </article>
+    <hr>
+    {{end}}
+</main>
 </body>
 </html>
