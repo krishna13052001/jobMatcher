@@ -2,21 +2,22 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	//"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	db    *sql.DB
-	store = sessions.NewCookieStore([]byte("your-secret-key"))
+	db     *sql.DB
+	jwtKey = []byte("your-secret-key")
 )
 
 type User struct {
@@ -34,6 +35,20 @@ type Post struct {
 	Tags      string
 	Image     string
 	CreatedAt string
+}
+
+type ErrorMsg struct {
+	Msg string
+}
+
+type HomeData struct {
+	Posts    []Post
+	LoggedIn bool
+}
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
 }
 
 func main() {
@@ -75,7 +90,7 @@ func setupRoutes() {
 	log.Println("Starting server on :8080")
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {
-		fmt.Println("Unable to start the server!!")
+		fmt.Println("Unable to start the server!!", err.Error())
 		return
 	}
 }
@@ -90,24 +105,44 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	}
 	err = t.Execute(w, data)
 	if err != nil {
-		fmt.Println("Unable able to load the error ", err.Error())
+		fmt.Println("Unable to load the template: ", err.Error())
 		return
 	}
 }
 
 func isLoggedIn(r *http.Request) bool {
-	session, _ := store.Get(r, "session-name")
-	return session.Values["username"] != nil
+	tokenCookie, err := r.Cookie("token")
+	if err != nil {
+		return false
+	}
+
+	tokenStr := tokenCookie.Value
+	claims := &Claims{}
+
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	return err == nil && tkn.Valid
 }
 
 func getSessionUser(r *http.Request) (User, error) {
-	session, _ := store.Get(r, "session-name")
-	username, ok := session.Values["username"].(string)
-	if !ok {
-		return User{}, fmt.Errorf("no user in session")
+	tokenCookie, err := r.Cookie("token")
+	if err != nil {
+		return User{}, fmt.Errorf("no token in cookie")
 	}
 
-	user, err := getUserByUsername(username)
+	tokenStr := tokenCookie.Value
+	claims := &Claims{}
+
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if err != nil || !tkn.Valid {
+		return User{}, fmt.Errorf("invalid token")
+	}
+
+	user, err := getUserByUsername(claims.Username)
 	if err != nil {
 		return User{}, err
 	}
@@ -117,14 +152,21 @@ func getSessionUser(r *http.Request) (User, error) {
 
 // Handlers
 
-func homeHandler(w http.ResponseWriter, _ *http.Request) {
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 	posts, err := getAllPosts()
 	if err != nil {
 		http.Error(w, "Unable to load posts", http.StatusInternalServerError)
 		return
 	}
 
-	renderTemplate(w, "home.html", posts)
+	loggedIn := isLoggedIn(r)
+
+	data := HomeData{
+		Posts:    posts,
+		LoggedIn: loggedIn,
+	}
+
+	renderTemplate(w, "home.html", data)
 }
 
 func viewPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,26 +196,37 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		session, _ := store.Get(r, "session-name")
-		session.Values["username"] = user.Username
-		err = session.Save(r, w)
+		expirationTime := time.Now().Add(24 * time.Hour)
+		claims := &Claims{
+			Username: user.Username,
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: expirationTime.Unix(),
+			},
+		}
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString(jwtKey)
 		if err != nil {
-			fmt.Println("Unable to save the session ", err.Error())
+			http.Error(w, "Unable to generate token", http.StatusInternalServerError)
 			return
 		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    "token",
+			Value:   tokenString,
+			Expires: expirationTime,
+		})
 
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session-name")
-	session.Options.MaxAge = -1
-	err := session.Save(r, w)
-	if err != nil {
-		fmt.Println("[logout] Unable to save the session ", err.Error())
-		return
-	}
+	http.SetCookie(w, &http.Cookie{
+		Name:   "token",
+		Value:  "",
+		MaxAge: -1,
+	})
 
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
@@ -186,28 +239,39 @@ func registerPostHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-
+	msg := ErrorMsg{Msg: ""}
 	_, err := getUserByUsername(username)
 	if err == nil {
-		http.Error(w, "Username already exists", http.StatusBadRequest)
+		//http.Error(w, "Username already exists", http.StatusBadRequest)
+		//http.Redirect(w, r, "/register", http.StatusBadRequest)
+		msg.Msg = "Username already exists"
+		renderTemplate(w, "register.html", msg)
 		return
-	} else if err != sql.ErrNoRows {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		msg.Msg = "Unable to register the user"
 		log.Println("Error checking username:", err)
+		renderTemplate(w, "register.html", msg)
+		//http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		msg.Msg = "Unable to register the user"
 		log.Println("Error hashing password:", err)
+		renderTemplate(w, "register.html", msg)
+		//w.WriteHeader(http.StatusBadRequest)
+		//w.Header()
+		//http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
 	err = createUser(username, email, hashedPassword)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		//http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		log.Println("Error creating user:", err)
+		msg.Msg = "Unable to register the user"
+		renderTemplate(w, "register.html", msg)
 		return
 	}
 
