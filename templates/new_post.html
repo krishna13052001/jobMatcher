@@ -1,21 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Post</title>
-    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <!-- Text editor CSS -->
+    <link rel="stylesheet" type="text/css" href="/static/text-editor.css">
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/42.0.0/ckeditor5.css" />
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" type="text/css" href="/static/output.css">
+    <!-- Preline -->
+    <script src="https://cdn.jsdelivr.net/npm/preline@2.3.0/dist/preline.min.js"></script>
+    
 </head>
-<body>
-<h1>New Post</h1>
-<form action="/posts/create" method="POST">
-    <label for="header">Header:</label>
-    <input type="text" id="header" name="header" required><br>
-    <label for="content">Content:</label>
-    <textarea id="content" name="content" required></textarea><br>
-    <label for="tags">Tags:</label>
-    <input type="text" id="tags" name="tags"><br>
-    <label for="image">Image URL:</label>
-    <input type="text" id="image" name="image"><br>
-    <button type="submit">Create Post</button>
-</form>
+<body class="bg-neutral-100 dark:bg-neutral-800">
+    <!-- <h1>New Post</h1>
+    <form action="/posts/create" method="POST">
+        <label for="header">Header:</label>
+        <input type="text" id="header" name="header" required><br>
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required></textarea><br>
+        <label for="tags">Tags:</label>
+        <input type="text" id="tags" name="tags"><br>
+        <label for="image">Image URL:</label>
+        <input type="text" id="image" name="image"><br>
+        <button type="submit">Create Post</button>
+    </form> -->
+    
+    <!-- Card Section -->
+<div class="max-w-4xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <form>
+      <!-- Card -->
+      <div class="bg-white rounded-xl shadow dark:bg-neutral-900">
+        <div class="relative h-40 rounded-t-xl bg-[url('https://preline.co/assets/svg/examples/abstract-bg-1.svg')] bg-no-repeat bg-cover bg-center"></div>
+  
+        <div class="pt-0 p-4 sm:pt-0 sm:p-7">
+          <!-- Grid -->
+          <div class="space-y-4 sm:space-y-6">
+            <div>
+              <div class="grid sm:flex sm:items-center sm:gap-x-5">
+                <div class="mt-4 sm:mt-auto sm:mb-1.5 flex justify-center sm:justify-start gap-2"></div>
+              </div>
+            </div>
+  
+            <div class="space-y-2">
+              <label for="af-submit-app-project-name" class="inline-block text-sm font-medium text-gray-800 mt-2.5 dark:text-neutral-200">
+                Blog Title
+              </label>
+  
+              <input id="af-submit-app-project-name" type="text" class="py-2 px-3 pe-11 block w-full border-gray-200 shadow-sm rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" placeholder="Enter project name">
+            </div>
+  
+            <div class="space-y-2">
+              <label for="af-submit-project-url" class="inline-block text-sm font-medium text-gray-800 mt-2.5 dark:text-neutral-200">
+                Image URL
+              </label>
+  
+              <input id="af-submit-project-url" type="text" class="py-2 px-3 pe-11 block w-full border-gray-200 shadow-sm text-sm rounded-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" placeholder="https://example.so">
+            </div>
+  
+            <div class="space-y-2">
+              <label for="af-submit-app-category" class="inline-block text-sm font-medium text-gray-800 mt-2.5 dark:text-neutral-200">
+                Tags
+              </label>
+  
+              <select id="af-submit-app-category" class="py-2 px-3 pe-9 block w-full border-gray-200 shadow-sm rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+                <option selected>Select a category</option>
+                <option>Ecommerce</option>
+                <option>Finance</option>
+                <option>Marketplace</option>
+                <option>Social</option>
+                <option>Others</option>
+              </select>
+            </div>
+  
+            <div class="space-y-2">
+              <label for="af-submit-app-description" class="inline-block text-sm font-medium text-gray-800 mt-2.5 dark:text-neutral-200">
+                Content
+              </label>
+
+              <textarea name="content" id="editor" class="" placeholder="Start typing here"></textarea>
+              <!-- <textarea id="af-submit-app-description" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" rows="6" placeholder="A detailed summary will better explain your products to the audiences. Our users will see this in your dedicated product page."></textarea> -->
+            </div>
+          </div>
+          <!-- End Grid -->
+  
+          <div class="mt-5 flex justify-center gap-x-2">
+            <button type="button" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+              Publish your blog
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </form>
+  </div>
+  <!-- End Card Section -->
+
+  
+  <!-- Dark mode -->
+  <button id="theme-toggle" class="bg-white dark:bg-neutral-900 p-4 rounded-full absolute top-6 right-12">
+      <svg class="flex-shrink-0 size-5 hidden dark:block fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+        <svg class="flex-shrink-0 size-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+        </svg>
+    </button>
+    <script src="/static/dark-mode.js"></script>
+
+    <!-- Text Editor -->
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "https://cdn.ckeditor.com/ckeditor5/42.0.0/ckeditor5.js",
+                "ckeditor5/": "https://cdn.ckeditor.com/ckeditor5/42.0.0/"
+            }
+        }
+    </script>
+    <script type="module" src="/static/text-editor.js"></script>
 </body>
 </html>
